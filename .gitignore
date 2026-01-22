@@ -1,0 +1,11 @@
+# Binaries
+veex-platform
+veex-platform.exe
+
+# Database/Storage
+data/registry.db
+data/storage/
+
+# IDEs
+.vscode/
+.idea/

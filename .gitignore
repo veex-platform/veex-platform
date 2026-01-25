@@ -1,11 +1,26 @@
 # Binaries
-veex-platform
-veex-platform.exe
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
 
-# Database/Storage
-data/registry.db
-data/storage/
+# Dependencies
+vendor/
 
 # IDEs
 .vscode/
 .idea/
+
+# Environment
+.env
+.env.local
+
+# Database
+data/*.db
+data/*.db-journal
+
+# Logs
+*.log

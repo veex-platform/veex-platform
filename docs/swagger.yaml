@@ -1,0 +1,552 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: support@veex.dev
+    name: VEEX Platform
+    url: https://github.com/veex-platform
+  description: Enterprise-grade Industrial IoT Platform API for device management,
+    OTA updates, and telemetry.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://github.com/veex-platform
+  title: VEEX Platform API
+  version: "1.0"
+paths:
+  /api/v1/analytics/dashboard:
+    get:
+      description: Get real-time metrics for the platform dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get dashboard metrics
+      tags:
+      - Analytics
+  /api/v1/analytics/devices/summary:
+    get:
+      description: Get aggregated device statistics by fleet and firmware version
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get device summary statistics
+      tags:
+      - Analytics
+  /api/v1/analytics/ota/success-rate:
+    get:
+      description: Get OTA campaign statistics including success rate
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get OTA success metrics
+      tags:
+      - Analytics
+  /api/v1/devices:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of registered devices with optional fleet filter
+      parameters:
+      - description: Filter by fleet ID
+        in: query
+        name: fleet_id
+        type: string
+      - default: 100
+        description: Maximum results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List devices
+      tags:
+      - Devices
+  /api/v1/devices/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a device and all its telemetry data
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Device not found
+          schema:
+            type: string
+      summary: Delete device
+      tags:
+      - Devices
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific device
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Device not found
+          schema:
+            type: string
+      summary: Get device details
+      tags:
+      - Devices
+    put:
+      consumes:
+      - application/json
+      description: Update device firmware version, fleet assignment, or metadata
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Device update payload
+        in: body
+        name: device
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Device not found
+          schema:
+            type: string
+      summary: Update device
+      tags:
+      - Devices
+  /api/v1/devices/{id}/telemetry:
+    get:
+      consumes:
+      - application/json
+      description: Get recent telemetry signals from a specific device
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 100
+        description: Maximum results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get device telemetry
+      tags:
+      - Devices
+  /api/v1/fleets:
+    get:
+      description: Get list of all device fleets/groups with device counts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all fleets
+      tags:
+      - Fleets
+    post:
+      consumes:
+      - application/json
+      description: Create a new device fleet/group
+      parameters:
+      - description: Fleet creation payload
+        in: body
+        name: fleet
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "409":
+          description: Fleet ID already exists
+          schema:
+            type: string
+      summary: Create a new fleet
+      tags:
+      - Fleets
+  /api/v1/fleets/{id}:
+    delete:
+      description: Permanently delete a fleet and remove device associations
+      parameters:
+      - description: Fleet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Fleet not found
+          schema:
+            type: string
+      summary: Delete fleet
+      tags:
+      - Fleets
+    get:
+      description: Get detailed information about a specific fleet
+      parameters:
+      - description: Fleet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Fleet not found
+          schema:
+            type: string
+      summary: Get fleet details
+      tags:
+      - Fleets
+    put:
+      consumes:
+      - application/json
+      description: Update fleet name, description, or other metadata
+      parameters:
+      - description: Fleet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fleet update payload
+        in: body
+        name: fleet
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Fleet not found
+          schema:
+            type: string
+      summary: Update fleet
+      tags:
+      - Fleets
+  /api/v1/fleets/{id}/devices:
+    post:
+      consumes:
+      - application/json
+      description: Assign a device to a specific fleet
+      parameters:
+      - description: Fleet ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Device assignment payload
+        in: body
+        name: device
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Device not found
+          schema:
+            type: string
+      summary: Add device to fleet
+      tags:
+      - Fleets
+  /api/v1/health:
+    get:
+      description: Get current health status of the platform including database connectivity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Platform health check
+      tags:
+      - Health
+  /api/v1/metrics:
+    get:
+      description: Get platform metrics in Prometheus exposition format
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Prometheus metrics
+      tags:
+      - Health
+  /api/v1/ota/campaigns:
+    get:
+      description: Get list of all OTA update campaigns with optional status filter
+      parameters:
+      - description: Filter by status (draft, active, paused, completed)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List OTA campaigns
+      tags:
+      - OTA
+    post:
+      consumes:
+      - application/json
+      description: Create a new OTA update campaign targeting a fleet
+      parameters:
+      - description: Campaign creation payload
+        in: body
+        name: campaign
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "409":
+          description: Campaign ID already exists
+          schema:
+            type: string
+      summary: Create OTA campaign
+      tags:
+      - OTA
+  /api/v1/ota/campaigns/{id}:
+    get:
+      description: Get detailed information about a specific OTA campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Campaign not found
+          schema:
+            type: string
+      summary: Get campaign details
+      tags:
+      - OTA
+  /api/v1/ota/campaigns/{id}/pause:
+    put:
+      description: Pause an active OTA campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Campaign not active
+          schema:
+            type: string
+      summary: Pause OTA campaign
+      tags:
+      - OTA
+  /api/v1/ota/campaigns/{id}/resume:
+    put:
+      description: Resume a paused OTA campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Campaign not paused
+          schema:
+            type: string
+      summary: Resume OTA campaign
+      tags:
+      - OTA
+  /api/v1/ota/campaigns/{id}/start:
+    post:
+      description: Start an OTA campaign and begin rolling out updates
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Campaign already started or invalid state
+          schema:
+            type: string
+      summary: Start OTA campaign
+      tags:
+      - OTA
+  /api/v1/version:
+    get:
+      description: Get version information about the VEEX Platform API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get API version
+      tags:
+      - Health
+swagger: "2.0"

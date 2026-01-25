@@ -1,0 +1,37 @@
+# This workflow will build and test the veex-platform project
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout veex-platform
+        uses: actions/checkout@v4
+        with:
+          path: veex-platform
+
+      - name: Checkout veex-build
+        uses: actions/checkout@v4
+        with:
+          repository: veex-platform/veex-build
+          path: veex-build
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+
+      - name: Build
+        run: go build -v ./...
+        working-directory: veex-platform
+
+      - name: Test
+        run: go test -v ./...
+        working-directory: veex-platform

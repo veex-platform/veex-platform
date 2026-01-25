@@ -1,0 +1,47 @@
+# .github/workflows/release.yml
+name: goreleaser
+
+on:
+  pull_request:
+  push:
+    # run only against tags
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout veex-platform
+        uses: actions/checkout@v4
+        with:
+          path: veex-platform
+          fetch-depth: 0
+
+      - name: Checkout veex-build
+        uses: actions/checkout@v4
+        with:
+          repository: veex-platform/veex-build
+          path: veex-build
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+      
+      # No assembly required: Syft/SBOM generation disabled for this repo.
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
+          # 'latest', 'nightly', or a semver
+          version: "~> v2"
+          args: release --clean
+          workdir: veex-platform
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

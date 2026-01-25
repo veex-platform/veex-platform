@@ -1,0 +1,661 @@
+openapi: 3.0.3
+info:
+  title: VEEX Platform API
+  description: |
+    Enterprise-grade Industrial IoT Platform API for device management, OTA updates, and telemetry.
+    
+    ## Features
+    - Device registry and fleet management
+    - OTA campaign management with controlled rollouts
+    - Real-time telemetry and analytics
+    - Prometheus-compatible metrics
+    
+  version: 1.0.0
+  contact:
+    name: VEEX Platform
+    url: https://github.com/veex-platform
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://registry.veex.dev
+    description: Production server
+
+tags:
+  - name: Devices
+    description: Device management and telemetry
+  - name: Fleets
+    description: Fleet/group management
+  - name: OTA
+    description: Over-the-Air update campaigns
+  - name: Analytics
+    description: Analytics and reporting
+  - name: Registry
+    description: Artifact registry operations
+  - name: Build
+    description: Cloud build service
+  - name: Observability
+    description: Telemetry ingestion
+  - name: Health
+    description: Platform health and monitoring
+
+paths:
+  # Device Management
+  /api/v1/devices:
+    get:
+      tags: [Devices]
+      summary: List devices
+      description: Get paginated list of registered devices
+      parameters:
+        - name: fleet_id
+          in: query
+          schema:
+            type: string
+          description: Filter by fleet ID
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: Maximum number of results
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+                  total:
+                    type: integer
+
+  /api/v1/devices/{id}:
+    get:
+      tags: [Devices]
+      summary: Get device details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+
+    put:
+      tags: [Devices]
+      summary: Update device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firmware_version:
+                  type: string
+                fleet_id:
+                  type: string
+                metadata:
+                  type: string
+      responses:
+        '200':
+          description: Device updated
+        '404':
+          description: Device not found
+
+    delete:
+      tags: [Devices]
+      summary: Delete device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device deleted
+        '404':
+          description: Device not found
+
+  /api/v1/devices/{id}/telemetry:
+    get:
+      tags: [Devices]
+      summary: Get device telemetry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Telemetry data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_id:
+                    type: string
+                  signals:
+                    type: array
+                    items:
+                      type: object
+                  total:
+                    type: integer
+
+  # Fleet Management
+  /api/v1/fleets:
+    get:
+      tags: [Fleets]
+      summary: List fleets
+      responses:
+        '200':
+          description: List of fleets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fleets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Fleet'
+                  total:
+                    type: integer
+
+    post:
+      tags: [Fleets]
+      summary: Create fleet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name]
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Fleet created
+        '409':
+          description: Fleet ID already exists
+
+  /api/v1/fleets/{id}:
+    get:
+      tags: [Fleets]
+      summary: Get fleet details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fleet found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fleet'
+
+    put:
+      tags: [Fleets]
+      summary: Update fleet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Fleet updated
+
+    delete:
+      tags: [Fleets]
+      summary: Delete fleet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fleet deleted
+
+  /api/v1/fleets/{id}/devices:
+    post:
+      tags: [Fleets]
+      summary: Add device to fleet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [device_id]
+              properties:
+                device_id:
+                  type: string
+      responses:
+        '200':
+          description: Device added to fleet
+
+  # OTA Campaigns
+  /api/v1/ota/campaigns:
+    get:
+      tags: [OTA]
+      summary: List OTA campaigns
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, paused, completed, failed]
+      responses:
+        '200':
+          description: List of campaigns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaigns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OTACampaign'
+
+    post:
+      tags: [OTA]
+      summary: Create OTA campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, artifact_id]
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                artifact_id:
+                  type: string
+                target_fleet_id:
+                  type: string
+      responses:
+        '201':
+          description: Campaign created
+
+  /api/v1/ota/campaigns/{id}:
+    get:
+      tags: [OTA]
+      summary: Get campaign details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTACampaign'
+
+  /api/v1/ota/campaigns/{id}/start:
+    post:
+      tags: [OTA]
+      summary: Start campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign started
+
+  /api/v1/ota/campaigns/{id}/pause:
+    put:
+      tags: [OTA]
+      summary: Pause campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign paused
+
+  /api/v1/ota/campaigns/{id}/resume:
+    put:
+      tags: [OTA]
+      summary: Resume campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Campaign resumed
+
+  # Analytics
+  /api/v1/analytics/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Get dashboard metrics
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_devices:
+                    type: integer
+                  active_devices:
+                    type: integer
+                  total_fleets:
+                    type: integer
+                  active_campaigns:
+                    type: integer
+                  signals_24h:
+                    type: integer
+
+  /api/v1/analytics/devices/summary:
+    get:
+      tags: [Analytics]
+      summary: Get device summary statistics
+      responses:
+        '200':
+          description: Device statistics
+
+  /api/v1/analytics/ota/success-rate:
+    get:
+      tags: [Analytics]
+      summary: Get OTA success metrics
+      responses:
+        '200':
+          description: OTA metrics
+
+  # Registry (existing endpoints)
+  /api/v1/registry/upload:
+    post:
+      tags: [Registry]
+      summary: Upload artifact
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                artifact:
+                  type: string
+                  format: binary
+                name:
+                  type: string
+                version:
+                  type: string
+      responses:
+        '201':
+          description: Artifact uploaded
+
+  /api/v1/registry/download:
+    get:
+      tags: [Registry]
+      summary: Download artifact
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artifact binary
+
+  /api/v1/registry/check-update:
+    get:
+      tags: [Registry]
+      summary: Check for firmware updates
+      parameters:
+        - name: device_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: current_version
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Update information
+        '401':
+          description: Device not registered
+
+  /api/v1/registry/register:
+    post:
+      tags: [Registry]
+      summary: Register device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: string
+      responses:
+        '201':
+          description: Device registered
+
+  # Build Service
+  /api/v1/build:
+    post:
+      tags: [Build]
+      summary: Cloud build VDL to VEX
+      responses:
+        '200':
+          description: Build successful
+
+  # Observability
+  /api/v1/observability/ingest:
+    post:
+      tags: [Observability]
+      summary: Ingest telemetry signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                signal:
+                  type: string
+                value:
+                  type: string
+      responses:
+        '202':
+          description: Signal accepted
+
+  # Health & Monitoring
+  /api/v1/health:
+    get:
+      tags: [Health]
+      summary: Platform health check
+      responses:
+        '200':
+          description: Platform is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  database:
+                    type: string
+                  uptime:
+                    type: string
+
+  /api/v1/version:
+    get:
+      tags: [Health]
+      summary: Get API version
+      responses:
+        '200':
+          description: Version information
+
+  /api/v1/metrics:
+    get:
+      tags: [Health]
+      summary: Prometheus metrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /dashboard:
+    get:
+      tags: [Observability]
+      summary: Web dashboard
+      responses:
+        '200':
+          description: HTML dashboard
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+        registered_at:
+          type: string
+          format: date-time
+        last_seen:
+          type: string
+          format: date-time
+        firmware_version:
+          type: string
+        fleet_id:
+          type: string
+        metadata:
+          type: string
+
+    Fleet:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        device_count:
+          type: integer
+
+    OTACampaign:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        artifact_id:
+          type: string
+        target_fleet_id:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, paused, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        success_count:
+          type: integer
+        failure_count:
+          type: integer

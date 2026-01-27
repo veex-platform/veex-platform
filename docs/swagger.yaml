@@ -1,5 +1,4 @@
 basePath: /
-host: localhost:8080
 info:
   contact:
     email: support@veex.dev
@@ -14,7 +13,7 @@ info:
   title: VEEX Platform API
   version: "1.0"
 paths:
-  /api/v1/analytics/dashboard:
+  /api/v1/admin/analytics/dashboard:
     get:
       description: Get real-time metrics for the platform dashboard
       produces:
@@ -28,7 +27,7 @@ paths:
       summary: Get dashboard metrics
       tags:
       - Analytics
-  /api/v1/analytics/devices/summary:
+  /api/v1/admin/analytics/devices/summary:
     get:
       description: Get aggregated device statistics by fleet and firmware version
       produces:
@@ -42,7 +41,7 @@ paths:
       summary: Get device summary statistics
       tags:
       - Analytics
-  /api/v1/analytics/ota/success-rate:
+  /api/v1/admin/analytics/ota/success-rate:
     get:
       description: Get OTA campaign statistics including success rate
       produces:
@@ -56,7 +55,7 @@ paths:
       summary: Get OTA success metrics
       tags:
       - Analytics
-  /api/v1/devices:
+  /api/v1/admin/devices:
     get:
       consumes:
       - application/json
@@ -71,6 +70,11 @@ paths:
         in: query
         name: limit
         type: integer
+      - default: 0
+        description: Number of results to skip
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -82,7 +86,7 @@ paths:
       summary: List devices
       tags:
       - Devices
-  /api/v1/devices/{id}:
+  /api/v1/admin/devices/{id}:
     delete:
       consumes:
       - application/json
@@ -167,7 +171,7 @@ paths:
       summary: Update device
       tags:
       - Devices
-  /api/v1/devices/{id}/telemetry:
+  /api/v1/admin/devices/{id}/telemetry:
     get:
       consumes:
       - application/json
@@ -194,9 +198,20 @@ paths:
       summary: Get device telemetry
       tags:
       - Devices
-  /api/v1/fleets:
+  /api/v1/admin/fleets:
     get:
       description: Get list of all device fleets/groups with device counts
+      parameters:
+      - default: 100
+        description: Maximum results
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of results to skip
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -239,7 +254,7 @@ paths:
       summary: Create a new fleet
       tags:
       - Fleets
-  /api/v1/fleets/{id}:
+  /api/v1/admin/fleets/{id}:
     delete:
       description: Permanently delete a fleet and remove device associations
       parameters:
@@ -320,7 +335,7 @@ paths:
       summary: Update fleet
       tags:
       - Fleets
-  /api/v1/fleets/{id}/devices:
+  /api/v1/admin/fleets/{id}/devices:
     post:
       consumes:
       - application/json
@@ -354,7 +369,7 @@ paths:
       summary: Add device to fleet
       tags:
       - Fleets
-  /api/v1/health:
+  /api/v1/admin/health:
     get:
       description: Get current health status of the platform including database connectivity
       produces:
@@ -373,20 +388,7 @@ paths:
       summary: Platform health check
       tags:
       - Health
-  /api/v1/metrics:
-    get:
-      description: Get platform metrics in Prometheus exposition format
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      summary: Prometheus metrics
-      tags:
-      - Health
-  /api/v1/ota/campaigns:
+  /api/v1/admin/ota/campaigns:
     get:
       description: Get list of all OTA update campaigns with optional status filter
       parameters:
@@ -394,6 +396,16 @@ paths:
         in: query
         name: status
         type: string
+      - default: 100
+        description: Maximum results
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of results to skip
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -436,7 +448,7 @@ paths:
       summary: Create OTA campaign
       tags:
       - OTA
-  /api/v1/ota/campaigns/{id}:
+  /api/v1/admin/ota/campaigns/{id}:
     get:
       description: Get detailed information about a specific OTA campaign
       parameters:
@@ -460,7 +472,7 @@ paths:
       summary: Get campaign details
       tags:
       - OTA
-  /api/v1/ota/campaigns/{id}/pause:
+  /api/v1/admin/ota/campaigns/{id}/pause:
     put:
       description: Pause an active OTA campaign
       parameters:
@@ -485,7 +497,7 @@ paths:
       summary: Pause OTA campaign
       tags:
       - OTA
-  /api/v1/ota/campaigns/{id}/resume:
+  /api/v1/admin/ota/campaigns/{id}/resume:
     put:
       description: Resume a paused OTA campaign
       parameters:
@@ -510,7 +522,7 @@ paths:
       summary: Resume OTA campaign
       tags:
       - OTA
-  /api/v1/ota/campaigns/{id}/start:
+  /api/v1/admin/ota/campaigns/{id}/start:
     post:
       description: Start an OTA campaign and begin rolling out updates
       parameters:
@@ -535,6 +547,19 @@ paths:
       summary: Start OTA campaign
       tags:
       - OTA
+  /api/v1/metrics:
+    get:
+      description: Get platform metrics in Prometheus exposition format
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Prometheus metrics
+      tags:
+      - Health
   /api/v1/version:
     get:
       description: Get version information about the VEEX Platform API
@@ -549,4 +574,7 @@ paths:
       summary: Get API version
       tags:
       - Health
+schemes:
+- http
+- https
 swagger: "2.0"

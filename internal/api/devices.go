@@ -26,7 +26,7 @@ func NewDevicesHandler(database *sql.DB) *DevicesHandler {
 // @Param limit query int false "Maximum results" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/devices [get]
+// @Router /api/v1/admin/devices [get]
 func (h *DevicesHandler) ListDevices(c *gin.Context) {
 	fleetID := c.Query("fleet_id")
 	limitStr := c.DefaultQuery("limit", "100")
@@ -96,7 +96,7 @@ func (h *DevicesHandler) ListDevices(c *gin.Context) {
 // @Param id path string true "Device ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {string} string "Device not found"
-// @Router /api/v1/devices/{id} [get]
+// @Router /api/v1/admin/devices/{id} [get]
 func (h *DevicesHandler) GetDevice(c *gin.Context) {
 	deviceID := c.Param("id")
 
@@ -145,7 +145,7 @@ func (h *DevicesHandler) GetDevice(c *gin.Context) {
 // @Param device body map[string]interface{} true "Device update payload"
 // @Success 200 {object} map[string]string
 // @Failure 404 {string} string "Device not found"
-// @Router /api/v1/devices/{id} [put]
+// @Router /api/v1/admin/devices/{id} [put]
 func (h *DevicesHandler) UpdateDevice(c *gin.Context) {
 	deviceID := c.Param("id")
 
@@ -188,7 +188,7 @@ func (h *DevicesHandler) UpdateDevice(c *gin.Context) {
 // @Param id path string true "Device ID"
 // @Success 200 {object} map[string]string
 // @Failure 404 {string} string "Device not found"
-// @Router /api/v1/devices/{id} [delete]
+// @Router /api/v1/admin/devices/{id} [delete]
 func (h *DevicesHandler) DeleteDevice(c *gin.Context) {
 	deviceID := c.Param("id")
 
@@ -219,7 +219,7 @@ func (h *DevicesHandler) DeleteDevice(c *gin.Context) {
 // @Param id path string true "Device ID"
 // @Param limit query int false "Maximum results" default(100)
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/devices/{id}/telemetry [get]
+// @Router /api/v1/admin/devices/{id}/telemetry [get]
 func (h *DevicesHandler) GetDeviceTelemetry(c *gin.Context) {
 	deviceID := c.Param("id")
 	limitStr := c.DefaultQuery("limit", "100")

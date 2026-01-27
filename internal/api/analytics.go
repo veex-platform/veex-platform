@@ -21,7 +21,7 @@ func NewAnalyticsHandler(database *sql.DB) *AnalyticsHandler {
 // @Tags Analytics
 // @Produce json
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/analytics/dashboard [get]
+// @Router /api/v1/admin/analytics/dashboard [get]
 func (h *AnalyticsHandler) GetDashboard(c *gin.Context) {
 	dashboard := gin.H{}
 
@@ -81,7 +81,7 @@ func (h *AnalyticsHandler) GetDashboard(c *gin.Context) {
 // @Tags Analytics
 // @Produce json
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/analytics/devices/summary [get]
+// @Router /api/v1/admin/analytics/devices/summary [get]
 func (h *AnalyticsHandler) GetDeviceSummary(c *gin.Context) {
 	summary := gin.H{}
 
@@ -133,7 +133,7 @@ func (h *AnalyticsHandler) GetDeviceSummary(c *gin.Context) {
 // @Tags Analytics
 // @Produce json
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/analytics/ota/success-rate [get]
+// @Router /api/v1/admin/analytics/ota/success-rate [get]
 func (h *AnalyticsHandler) GetOTAMetrics(c *gin.Context) {
 	metrics := gin.H{}
 

@@ -29,7 +29,7 @@ func NewHealthHandler(database *sql.DB) *HealthHandler {
 // @Produce json
 // @Success 200 {object} map[string]interface{}
 // @Failure 503 {object} map[string]interface{}
-// @Router /api/v1/health [get]
+// @Router /api/v1/admin/health [get]
 func (h *HealthHandler) Health(c *gin.Context) {
 	health := gin.H{
 		"status":    "healthy",

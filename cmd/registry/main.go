@@ -29,12 +29,13 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @schemes http https
+// @schemes https http
 // @BasePath /
 
 func main() {
 	// Dynamically set Swagger host to empty to use the current domain
 	docs.SwaggerInfo.Host = ""
+	docs.SwaggerInfo.Schemes = []string{"https", "http"}
 
 	// Configuration
 	port := os.Getenv("PORT")
@@ -86,23 +87,7 @@ func main() {
 	router := gin.Default()
 
 	// CORS Middleware
-	router.Use(func(c *gin.Context) {
-		origins := os.Getenv("ALLOWED_ORIGINS")
-		if origins == "" {
-			origins = "*"
-		}
-		c.Writer.Header().Set("Access-Control-Allow-Origin", origins)
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	})
+	router.Use(api.CORSMiddleware())
 
 	// Discovery Middleware: Detects the public Base URL for the platform
 	router.Use(func(c *gin.Context) {

@@ -27,7 +27,7 @@ func NewOTAHandler(database *sql.DB) *OTAHandler {
 // @Param limit query int false "Maximum results" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/ota/campaigns [get]
+// @Router /api/v1/admin/ota/campaigns [get]
 func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 	status := c.Query("status")
 	limitStr := c.DefaultQuery("limit", "100")
@@ -106,7 +106,7 @@ func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 // @Success 201 {object} map[string]interface{}
 // @Failure 400 {string} string "Invalid request"
 // @Failure 409 {string} string "Campaign ID already exists"
-// @Router /api/v1/ota/campaigns [post]
+// @Router /api/v1/admin/ota/campaigns [post]
 func (h *OTAHandler) CreateCampaign(c *gin.Context) {
 	var req struct {
 		ID          string `json:"id"`
@@ -155,7 +155,7 @@ func (h *OTAHandler) CreateCampaign(c *gin.Context) {
 // @Param id path string true "Campaign ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {string} string "Campaign not found"
-// @Router /api/v1/ota/campaigns/{id} [get]
+// @Router /api/v1/admin/ota/campaigns/{id} [get]
 func (h *OTAHandler) GetCampaign(c *gin.Context) {
 	campaignID := c.Param("id")
 
@@ -208,7 +208,7 @@ func (h *OTAHandler) GetCampaign(c *gin.Context) {
 // @Param id path string true "Campaign ID"
 // @Success 200 {object} map[string]string
 // @Failure 400 {string} string "Campaign already started or invalid state"
-// @Router /api/v1/ota/campaigns/{id}/start [post]
+// @Router /api/v1/admin/ota/campaigns/{id}/start [post]
 func (h *OTAHandler) StartCampaign(c *gin.Context) {
 	campaignID := c.Param("id")
 
@@ -241,7 +241,7 @@ func (h *OTAHandler) StartCampaign(c *gin.Context) {
 // @Param id path string true "Campaign ID"
 // @Success 200 {object} map[string]string
 // @Failure 400 {string} string "Campaign not active"
-// @Router /api/v1/ota/campaigns/{id}/pause [put]
+// @Router /api/v1/admin/ota/campaigns/{id}/pause [put]
 func (h *OTAHandler) PauseCampaign(c *gin.Context) {
 	campaignID := c.Param("id")
 
@@ -274,7 +274,7 @@ func (h *OTAHandler) PauseCampaign(c *gin.Context) {
 // @Param id path string true "Campaign ID"
 // @Success 200 {object} map[string]string
 // @Failure 400 {string} string "Campaign not paused"
-// @Router /api/v1/ota/campaigns/{id}/resume [put]
+// @Router /api/v1/admin/ota/campaigns/{id}/resume [put]
 func (h *OTAHandler) ResumeCampaign(c *gin.Context) {
 	campaignID := c.Param("id")
 

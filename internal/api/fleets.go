@@ -26,7 +26,7 @@ func NewFleetsHandler(database *sql.DB) *FleetsHandler {
 // @Param limit query int false "Maximum results" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} map[string]interface{}
-// @Router /api/v1/fleets [get]
+// @Router /api/v1/admin/fleets [get]
 func (h *FleetsHandler) ListFleets(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "100")
 	offsetStr := c.DefaultQuery("offset", "0")
@@ -89,7 +89,7 @@ func (h *FleetsHandler) ListFleets(c *gin.Context) {
 // @Success 201 {object} map[string]interface{}
 // @Failure 400 {string} string "Invalid request"
 // @Failure 409 {string} string "Fleet ID already exists"
-// @Router /api/v1/fleets [post]
+// @Router /api/v1/admin/fleets [post]
 func (h *FleetsHandler) CreateFleet(c *gin.Context) {
 	var req struct {
 		ID          string `json:"id"`
@@ -137,7 +137,7 @@ func (h *FleetsHandler) CreateFleet(c *gin.Context) {
 // @Param id path string true "Fleet ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {string} string "Fleet not found"
-// @Router /api/v1/fleets/{id} [get]
+// @Router /api/v1/admin/fleets/{id} [get]
 func (h *FleetsHandler) GetFleet(c *gin.Context) {
 	fleetID := c.Param("id")
 
@@ -187,7 +187,7 @@ func (h *FleetsHandler) GetFleet(c *gin.Context) {
 // @Param fleet body map[string]interface{} true "Fleet update payload"
 // @Success 200 {object} map[string]string
 // @Failure 404 {string} string "Fleet not found"
-// @Router /api/v1/fleets/{id} [put]
+// @Router /api/v1/admin/fleets/{id} [put]
 func (h *FleetsHandler) UpdateFleet(c *gin.Context) {
 	fleetID := c.Param("id")
 
@@ -230,7 +230,7 @@ func (h *FleetsHandler) UpdateFleet(c *gin.Context) {
 // @Param id path string true "Fleet ID"
 // @Success 200 {object} map[string]string
 // @Failure 404 {string} string "Fleet not found"
-// @Router /api/v1/fleets/{id} [delete]
+// @Router /api/v1/admin/fleets/{id} [delete]
 func (h *FleetsHandler) DeleteFleet(c *gin.Context) {
 	fleetID := c.Param("id")
 
@@ -264,7 +264,7 @@ func (h *FleetsHandler) DeleteFleet(c *gin.Context) {
 // @Param device body map[string]interface{} true "Device assignment payload"
 // @Success 200 {object} map[string]string
 // @Failure 404 {string} string "Device not found"
-// @Router /api/v1/fleets/{id}/devices [post]
+// @Router /api/v1/admin/fleets/{id}/devices [post]
 func (h *FleetsHandler) AddDeviceToFleet(c *gin.Context) {
 	fleetID := c.Param("id")
 

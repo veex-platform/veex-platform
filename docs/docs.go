@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/analytics/dashboard": {
+        "/api/v1/admin/analytics/dashboard": {
             "get": {
                 "description": "Get real-time metrics for the platform dashboard",
                 "produces": [
@@ -45,7 +45,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/analytics/devices/summary": {
+        "/api/v1/admin/analytics/devices/summary": {
             "get": {
                 "description": "Get aggregated device statistics by fleet and firmware version",
                 "produces": [
@@ -66,7 +66,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/analytics/ota/success-rate": {
+        "/api/v1/admin/analytics/ota/success-rate": {
             "get": {
                 "description": "Get OTA campaign statistics including success rate",
                 "produces": [
@@ -87,7 +87,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/devices": {
+        "/api/v1/admin/devices": {
             "get": {
                 "description": "Get paginated list of registered devices with optional fleet filter",
                 "consumes": [
@@ -113,6 +113,13 @@ const docTemplate = `{
                         "description": "Maximum results",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of results to skip",
+                        "name": "offset",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -126,7 +133,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/devices/{id}": {
+        "/api/v1/admin/devices/{id}": {
             "get": {
                 "description": "Get detailed information about a specific device",
                 "consumes": [
@@ -253,7 +260,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/devices/{id}/telemetry": {
+        "/api/v1/admin/devices/{id}/telemetry": {
             "get": {
                 "description": "Get recent telemetry signals from a specific device",
                 "consumes": [
@@ -293,7 +300,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/fleets": {
+        "/api/v1/admin/fleets": {
             "get": {
                 "description": "Get list of all device fleets/groups with device counts",
                 "produces": [
@@ -303,6 +310,22 @@ const docTemplate = `{
                     "Fleets"
                 ],
                 "summary": "List all fleets",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of results to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -360,7 +383,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/fleets/{id}": {
+        "/api/v1/admin/fleets/{id}": {
             "get": {
                 "description": "Get detailed information about a specific fleet",
                 "produces": [
@@ -481,7 +504,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/fleets/{id}/devices": {
+        "/api/v1/admin/fleets/{id}/devices": {
             "post": {
                 "description": "Assign a device to a specific fleet",
                 "consumes": [
@@ -532,7 +555,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/health": {
+        "/api/v1/admin/health": {
             "get": {
                 "description": "Get current health status of the platform including database connectivity",
                 "produces": [
@@ -560,27 +583,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/metrics": {
-            "get": {
-                "description": "Get platform metrics in Prometheus exposition format",
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "Health"
-                ],
-                "summary": "Prometheus metrics",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/ota/campaigns": {
+        "/api/v1/admin/ota/campaigns": {
             "get": {
                 "description": "Get list of all OTA update campaigns with optional status filter",
                 "produces": [
@@ -595,6 +598,20 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by status (draft, active, paused, completed)",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of results to skip",
+                        "name": "offset",
                         "in": "query"
                     }
                 ],
@@ -655,7 +672,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/ota/campaigns/{id}": {
+        "/api/v1/admin/ota/campaigns/{id}": {
             "get": {
                 "description": "Get detailed information about a specific OTA campaign",
                 "produces": [
@@ -691,7 +708,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/ota/campaigns/{id}/pause": {
+        "/api/v1/admin/ota/campaigns/{id}/pause": {
             "put": {
                 "description": "Pause an active OTA campaign",
                 "produces": [
@@ -729,7 +746,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/ota/campaigns/{id}/resume": {
+        "/api/v1/admin/ota/campaigns/{id}/resume": {
             "put": {
                 "description": "Resume a paused OTA campaign",
                 "produces": [
@@ -767,7 +784,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/ota/campaigns/{id}/start": {
+        "/api/v1/admin/ota/campaigns/{id}/start": {
             "post": {
                 "description": "Start an OTA campaign and begin rolling out updates",
                 "produces": [
@@ -805,6 +822,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/metrics": {
+            "get": {
+                "description": "Get platform metrics in Prometheus exposition format",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Prometheus metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/version": {
             "get": {
                 "description": "Get version information about the VEEX Platform API",
@@ -832,9 +869,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/",
-	Schemes:          []string{},
+	Schemes:          []string{"http", "https"},
 	Title:            "VEEX Platform API",
 	Description:      "Enterprise-grade Industrial IoT Platform API for device management, OTA updates, and telemetry.",
 	InfoInstanceName: "swagger",

@@ -24,12 +24,15 @@ func NewDevicesHandler(database *sql.DB) *DevicesHandler {
 // @Produce json
 // @Param fleet_id query string false "Filter by fleet ID"
 // @Param limit query int false "Maximum results" default(100)
+// @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} map[string]interface{}
 // @Router /api/v1/devices [get]
 func (h *DevicesHandler) ListDevices(c *gin.Context) {
 	fleetID := c.Query("fleet_id")
 	limitStr := c.DefaultQuery("limit", "100")
+	offsetStr := c.DefaultQuery("offset", "0")
 	limit, _ := strconv.Atoi(limitStr)
+	offset, _ := strconv.Atoi(offsetStr)
 
 	var rows *sql.Rows
 	var err error
@@ -39,12 +42,12 @@ func (h *DevicesHandler) ListDevices(c *gin.Context) {
 			SELECT id, firmware_version, fleet_id, last_seen, metadata 
 			FROM devices 
 			WHERE fleet_id = ? 
-			LIMIT ?`, fleetID, limit)
+			LIMIT ? OFFSET ?`, fleetID, limit, offset)
 	} else {
 		rows, err = h.db.Query(`
 			SELECT id, firmware_version, fleet_id, last_seen, metadata 
 			FROM devices 
-			LIMIT ?`, limit)
+			LIMIT ? OFFSET ?`, limit, offset)
 	}
 
 	if err != nil {

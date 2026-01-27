@@ -1,0 +1,18 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "comm.ble"
+
+flows:
+  prov:
+    steps:
+      - name: "start_adv"
+        capability: "comm.ble"
+        action: "advertise"
+        params: { name: "VEEX-NODE-01" }
+
+      - name: "wait_for_gatt"
+        capability: "comm.ble"
+        action: "wait_connection"
+        params: { timeout: 0 }

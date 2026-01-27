@@ -1,0 +1,22 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "platform.sensor"
+  - "comm.http"
+
+flows:
+  sync:
+    steps:
+      - name: "get_sensor_data"
+        capability: "platform.sensor"
+        action: "read"
+        params: { type: "temp" }
+
+      - name: "post_to_cloud"
+        capability: "comm.http"
+        action: "post"
+        params: { 
+          url: "https://api.industrial-iot.com/v1/telemetry", 
+          data: "$DATA" 
+        }

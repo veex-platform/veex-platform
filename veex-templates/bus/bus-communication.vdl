@@ -1,0 +1,19 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "platform.i2c"
+  - "platform.spi"
+
+flows:
+  bus_scan:
+    steps:
+      - name: "read_i2c_sensor"
+        capability: "platform.i2c"
+        action: "read"
+        params: { address: 0x68, register: 0x3B, length: 6 }
+
+      - name: "write_spi_display"
+        capability: "platform.spi"
+        action: "transfer"
+        params: { cs_pin: 15, data: "$DATA" }

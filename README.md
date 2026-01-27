@@ -24,6 +24,19 @@ When deploying VEEX Platform locally (via Docker), you must ensure that the devi
 - Default: `http://localhost:80` (suitable for Unified Gateway local setups).
 - On-Premise: Point to your server's static IP (e.g., `http://192.168.1.50:80`).
 
+## Database Configuration
+The platform supports both SQLite (local/edge) and PostgreSQL (production).
+
+| Environment Variable | Description | Default |
+| :--- | :--- | :--- |
+| `DB_TYPE` | Type of database: `sqlite` or `postgres` | `sqlite` |
+| `DATABASE_URL` | Connection string for PostgreSQL | - |
+| `DATA_DIR` | Path to SQLite and registry data | `data` |
+| `STORAGE_DIR` | Path to artifact binaries | `storage` |
+
+**PostgreSQL Example:**
+`DB_TYPE=postgres DATABASE_URL=postgres://user:pass@localhost:5432/veex?sslmode=disable`
+
 ---
 [Official Site](https://github.com/veex-platform) | [API Docs](https://github.com/veex-platform/veex-docs/technical-reference)
 

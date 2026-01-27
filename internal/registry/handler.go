@@ -117,9 +117,14 @@ func (h *RegistryHandler) Upload(w http.ResponseWriter, r *http.Request) {
 			file_name=excluded.file_name, 
 			download_url=excluded.download_url`
 
-	_, err = h.Devices.db.Exec(query, artifact.ID, artifact.Name, artifact.Version, artifact.TargetArch, artifact.FileName, artifact.DownloadURL)
-	if err != nil {
-		fmt.Printf("❌ Database error during artifact registration: %v\n", err)
+	// Only attempt DB insert if database is available
+	if h.Devices != nil && h.Devices.db != nil {
+		_, err = h.Devices.db.Exec(query, artifact.ID, artifact.Name, artifact.Version, artifact.TargetArch, artifact.FileName, artifact.DownloadURL)
+		if err != nil {
+			fmt.Printf("❌ Database error during artifact registration: %v\n", err)
+		}
+	} else {
+		fmt.Println("⚠️  Database not available, skipping artifact registration")
 	}
 
 	metaPath := filePath + ".json"
@@ -221,9 +226,14 @@ func (h *RegistryHandler) Build(w http.ResponseWriter, r *http.Request) {
 			file_name=excluded.file_name, 
 			download_url=excluded.download_url`
 
-	_, err = h.Devices.db.Exec(query, artifact.ID, artifact.Name, artifact.Version, artifact.TargetArch, artifact.FileName, artifact.DownloadURL)
-	if err != nil {
-		fmt.Printf("❌ Database error during artifact registration: %v\n", err)
+	// Only attempt DB insert if database is available
+	if h.Devices != nil && h.Devices.db != nil {
+		_, err = h.Devices.db.Exec(query, artifact.ID, artifact.Name, artifact.Version, artifact.TargetArch, artifact.FileName, artifact.DownloadURL)
+		if err != nil {
+			fmt.Printf("❌ Database error during artifact registration: %v\n", err)
+		}
+	} else {
+		fmt.Println("⚠️  Database not available, skipping artifact registration")
 	}
 
 	metaPath := vexPath + ".json"

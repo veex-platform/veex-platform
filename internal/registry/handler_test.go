@@ -22,8 +22,11 @@ func TestUploadArtifact(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	// Note: DB is nil, but handler gracefully handles DB errors (logs warning)
+	// This allows testing file upload/verification without CGO/SQLite3 dependency
 	handler := &RegistryHandler{
 		StorageDir: tmpDir,
+		Devices:    &DeviceRegistry{db: nil},
 	}
 
 	// 1. Prepare dummy artifact data with signature
@@ -121,12 +124,15 @@ func TestBuildHandler(t *testing.T) {
 	tmpDir, _ := os.MkdirTemp("", "veex-build-test-*")
 	defer os.RemoveAll(tmpDir)
 
-	handler := &RegistryHandler{StorageDir: tmpDir}
+	handler := &RegistryHandler{
+		StorageDir: tmpDir,
+		Devices:    &DeviceRegistry{db: nil},
+	}
 
 	reqBody := map[string]string{
 		"name":    "cloud-build-test",
 		"version": "0.5.0",
-		"vdl":     "name: cloud-build-test\nflows:\n  - name: main\n    steps:\n      - name: init\n        capability: platform.core\n        action: wait",
+		"vdl":     "name: cloud-build-test\nflows:\n  main:\n    steps:\n      - name: init\n        capability: platform.core\n        action: wait",
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
@@ -137,11 +143,16 @@ func TestBuildHandler(t *testing.T) {
 
 	if rr.Code != http.StatusCreated {
 		t.Errorf("expected 201, got %v: %s", rr.Code, rr.Body.String())
+		return // Skip file check if build failed
 	}
 
 	// Verify artifact has signature (should be > 64 bytes if signed)
 	filePath := filepath.Join(tmpDir, "cloud-build-test-0.5.0.vex")
-	info, _ := os.Stat(filePath)
+	info, err := os.Stat(filePath)
+	if err != nil {
+		t.Errorf("artifact file not created: %v", err)
+		return
+	}
 	if info.Size() <= 64 {
 		t.Errorf("expected signed artifact (>64 bytes), got %d", info.Size())
 	}

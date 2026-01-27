@@ -1,0 +1,10 @@
+# Build files
+dist/
+out/
+
+# IDEs
+.vscode/
+.idea/
+
+# Misc
+.DS_Store

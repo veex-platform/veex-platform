@@ -1,0 +1,34 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "platform.core"
+  - "comm.mqtt"
+  - "platform.gpio"
+
+flows:
+  heartbeat:
+    steps:
+      - name: "system_check"
+        capability: "platform.core"
+        action: "wait"
+        params: { ms: 60000 } # 1 minuto
+
+      - name: "send_uptime"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { 
+          topic: "v1/device/veex/health", 
+          payload: "UPTIME_OK",
+          qos: 1 
+        }
+
+      - name: "flash_status_led"
+        capability: "platform.gpio"
+        action: "write"
+        params: { pin: 2, level: 1 }
+      
+      - name: "led_off"
+        capability: "platform.gpio"
+        action: "write"
+        params: { pin: 2, level: 0 }

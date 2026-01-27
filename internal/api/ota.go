@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -23,10 +24,16 @@ func NewOTAHandler(database *sql.DB) *OTAHandler {
 // @Tags OTA
 // @Produce json
 // @Param status query string false "Filter by status (draft, active, paused, completed)"
+// @Param limit query int false "Maximum results" default(100)
+// @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} map[string]interface{}
 // @Router /api/v1/ota/campaigns [get]
 func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 	status := c.Query("status")
+	limitStr := c.DefaultQuery("limit", "100")
+	offsetStr := c.DefaultQuery("offset", "0")
+	limit, _ := strconv.Atoi(limitStr)
+	offset, _ := strconv.Atoi(offsetStr)
 
 	var rows *sql.Rows
 	var err error
@@ -36,12 +43,14 @@ func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 			SELECT id, name, artifact_id, target_fleet_id, status, created_at, started_at, completed_at, success_count, failure_count 
 			FROM ota_campaigns 
 			WHERE status = ? 
-			ORDER BY created_at DESC`, status)
+			ORDER BY created_at DESC
+			LIMIT ? OFFSET ?`, status, limit, offset)
 	} else {
 		rows, err = h.db.Query(`
 			SELECT id, name, artifact_id, target_fleet_id, status, created_at, started_at, completed_at, success_count, failure_count 
 			FROM ota_campaigns 
-			ORDER BY created_at DESC`)
+			ORDER BY created_at DESC
+			LIMIT ? OFFSET ?`, limit, offset)
 	}
 
 	if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -57,7 +58,7 @@ func main() {
 
 	templatesDir := os.Getenv("TEMPLATES_DIR")
 	if templatesDir == "" {
-		templatesDir = "../veex-templates"
+		templatesDir = "./veex-templates"
 	}
 
 	// Initialize Database
@@ -130,61 +131,82 @@ func main() {
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
-		// Devices
-		devices := v1.Group("/devices")
+		// --- ADMIN GROUP ---
+		admin := v1.Group("/admin")
 		{
-			devices.GET("", devicesHandler.ListDevices)
-			devices.GET("/:id", devicesHandler.GetDevice)
-			devices.PUT("/:id", devicesHandler.UpdateDevice)
-			devices.DELETE("/:id", devicesHandler.DeleteDevice)
-			devices.GET("/:id/telemetry", devicesHandler.GetDeviceTelemetry)
+			admin.GET("/stats", func(c *gin.Context) {
+				var devCount, fleetCount, campaignCount int
+				database.QueryRow("SELECT COUNT(*) FROM devices").Scan(&devCount)
+				database.QueryRow("SELECT COUNT(*) FROM fleets").Scan(&fleetCount)
+				database.QueryRow("SELECT COUNT(*) FROM ota_campaigns").Scan(&campaignCount)
+
+				c.JSON(http.StatusOK, gin.H{
+					"devices":   devCount,
+					"fleets":    fleetCount,
+					"campaigns": campaignCount,
+					"version":   "v1.1.1",
+					"status":    "operational",
+				})
+			})
+			admin.GET("/health", healthHandler.Health)
+
+			// Resource Management
+			devices := admin.Group("/devices")
+			{
+				devices.GET("", devicesHandler.ListDevices)
+				devices.GET("/:id", devicesHandler.GetDevice)
+				devices.PUT("/:id", devicesHandler.UpdateDevice)
+				devices.DELETE("/:id", devicesHandler.DeleteDevice)
+				devices.GET("/:id/telemetry", devicesHandler.GetDeviceTelemetry)
+			}
+
+			fleets := admin.Group("/fleets")
+			{
+				fleets.GET("", fleetsHandler.ListFleets)
+				fleets.POST("", fleetsHandler.CreateFleet)
+				fleets.GET("/:id", fleetsHandler.GetFleet)
+				fleets.PUT("/:id", fleetsHandler.UpdateFleet)
+				fleets.DELETE("/:id", fleetsHandler.DeleteFleet)
+				fleets.POST("/:id/devices", fleetsHandler.AddDeviceToFleet)
+			}
+
+			ota := admin.Group("/ota")
+			{
+				ota.GET("/campaigns", otaHandler.ListCampaigns)
+				ota.POST("/campaigns", otaHandler.CreateCampaign)
+				ota.GET("/campaigns/:id", otaHandler.GetCampaign)
+				ota.POST("/campaigns/:id/start", otaHandler.StartCampaign)
+				ota.PUT("/campaigns/:id/pause", otaHandler.PauseCampaign)
+				ota.PUT("/campaigns/:id/resume", otaHandler.ResumeCampaign)
+			}
+
+			admin.GET("/analytics/dashboard", analyticsHandler.GetDashboard)
 		}
 
-		// Fleets
-		fleets := v1.Group("/fleets")
+		// --- DEVELOPER GROUP (CLI & Studio) ---
+		dev := v1.Group("/dev")
 		{
-			fleets.GET("", fleetsHandler.ListFleets)
-			fleets.POST("", fleetsHandler.CreateFleet)
-			fleets.GET("/:id", fleetsHandler.GetFleet)
-			fleets.PUT("/:id", fleetsHandler.UpdateFleet)
-			fleets.DELETE("/:id", fleetsHandler.DeleteFleet)
-			fleets.POST("/:id/devices", fleetsHandler.AddDeviceToFleet)
+			dev.POST("/build", gin.WrapF(rh.Build))
+			dev.POST("/upload", gin.WrapF(rh.Upload))
+			dev.GET("/templates", templatesHandler.ListTemplates)
 		}
 
-		// OTA Campaigns
-		ota := v1.Group("/ota/campaigns")
+		// --- RUNTIME GROUP (Devices) ---
+		runtime := v1.Group("/runtime")
 		{
-			ota.GET("", otaHandler.ListCampaigns)
-			ota.POST("", otaHandler.CreateCampaign)
-			ota.GET("/:id", otaHandler.GetCampaign)
-			ota.POST("/:id/start", otaHandler.StartCampaign)
-			ota.PUT("/:id/pause", otaHandler.PauseCampaign)
-			ota.PUT("/:id/resume", otaHandler.ResumeCampaign)
+			runtime.POST("/register", gin.WrapF(rh.Devices.Register))
+			runtime.GET("/check-update", gin.WrapF(rh.CheckUpdate))
+			runtime.GET("/download", gin.WrapF(rh.Download))
 		}
 
-		// Analytics
-		analytics := v1.Group("/analytics")
-		{
-			analytics.GET("/dashboard", analyticsHandler.GetDashboard)
-			analytics.GET("/devices/summary", analyticsHandler.GetDeviceSummary)
-			analytics.GET("/ota/success-rate", analyticsHandler.GetOTAMetrics)
-		}
-
-		// Health & Monitoring
-		v1.GET("/health", healthHandler.Health)
-		v1.GET("/version", healthHandler.Version)
-		v1.GET("/metrics", healthHandler.Metrics)
-
-		// Templates
-		v1.GET("/templates", templatesHandler.ListTemplates)
-
-		// OTA & Fleet Management
-		v1.GET("/ota/devices", otaHandler.ListDevices)
-		v1.GET("/ota/fleets", otaHandler.ListFleets)
-		v1.POST("/ota/fleets", otaHandler.CreateFleet)
+		// --- COMPATIBILITY ALIASES (Legacy) ---
+		v1.GET("/devices", devicesHandler.ListDevices)
+		v1.GET("/fleets", fleetsHandler.ListFleets)
+		v1.GET("/ota/campaigns", otaHandler.ListCampaigns)
 		v1.POST("/ota/campaigns", otaHandler.CreateCampaign)
+		v1.GET("/templates", templatesHandler.ListTemplates)
+		v1.POST("/build", gin.WrapF(rh.Build))
 
-		// Legacy Registry endpoints (kept for backwards compatibility)
 		registry := v1.Group("/registry")
 		{
 			registry.POST("/upload", gin.WrapF(rh.Upload))
@@ -192,15 +214,12 @@ func main() {
 			registry.GET("/check-update", gin.WrapF(rh.CheckUpdate))
 			registry.POST("/register", gin.WrapF(rh.Devices.Register))
 		}
-
-		// Build endpoint
-		v1.POST("/build", gin.WrapF(rh.Build))
-
 	}
 
-	// Observability (Root level for deployment compatibility)
+	// Observability & Native Routes
 	router.POST("/signals", gin.WrapF(oh.Ingest))
 	router.GET("/dashboard", gin.WrapF(oh.Dashboard))
+	router.GET("/health", healthHandler.Health) // Root health
 
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

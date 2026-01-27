@@ -1,0 +1,21 @@
+version: "1.0"
+name: "Connection Monitor"
+description: "Monitora o status da rede e executa ações de contingência."
+
+flows:
+  - name: "monitor"
+    steps:
+      - name: "check_wifi"
+        capability: "platform.core"
+        action: "wait"
+        params: { ms: 5000 }
+
+      - name: "ping_cloud"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { topic: "v1/device/veex/keepalive", payload: "PING" }
+      
+      - name: "on_failure"
+        capability: "platform.gpio"
+        action: "write"
+        params: { pin: 25, level: 1 } # LED vermelho de erro

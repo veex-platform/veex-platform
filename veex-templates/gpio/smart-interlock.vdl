@@ -1,0 +1,29 @@
+version: "1.0"
+name: "Smart Interlock"
+description: "Lógica de travamento entre entradas e saídas digitais locais."
+
+flows:
+  - name: "safety_loop"
+    steps:
+      - name: "read_limit_switch"
+        capability: "platform.gpio"
+        action: "read"
+        params: { pin: 5 }
+
+      - name: "check_condition"
+        capability: "platform.core"
+        action: "wait"
+        params: { ms: 10 } # Debounce manual simples
+
+      - name: "control_motor"
+        capability: "platform.gpio"
+        action: "write"
+        params: { pin: 18, level: "$DATA" }
+
+      - name: "log_event"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { 
+          topic: "v1/device/veex/safety", 
+          payload: "LIMIT_SWITCH_TRIGGERED" 
+        }

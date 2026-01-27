@@ -7,7 +7,6 @@ WORKDIR /app
 # Context must be the root containing both
 COPY veex-build ./veex-build
 COPY veex-platform ./veex-platform
-COPY veex-templates ./veex-templates
 
 WORKDIR /app/veex-platform
 RUN go mod download
@@ -29,7 +28,7 @@ COPY --from=builder /app/veex-platform/data ./data
 # Copy needed schemas for the compiler library
 COPY --from=builder /app/veex-build/internal/schema ./internal/schema
 # Copy templates for the studio
-COPY --from=builder /app/veex-templates ./veex-templates
+COPY --from=builder /app/veex-platform/veex-templates ./veex-templates
 
 # Expose the API port
 ENV PORT=8080

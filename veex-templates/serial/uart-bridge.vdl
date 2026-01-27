@@ -1,0 +1,19 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "platform.uart"
+  - "comm.mqtt"
+
+flows:
+  uart_bridge:
+    steps:
+      - name: "read_modbus"
+        capability: "platform.uart"
+        action: "read"
+        params: { baud: 9600, timeout: 500 }
+
+      - name: "forward_mqtt"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { topic: "v1/serial/bridge", payload: "$DATA" }

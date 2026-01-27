@@ -1,0 +1,17 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "comm.grpc"
+
+flows:
+  rpc_flow:
+    steps:
+      - name: "call_controller"
+        capability: "comm.grpc"
+        action: "call"
+        params: { 
+          service: "IndustrialController", 
+          method: "UpdateState",
+          data: "$STATE"
+        }

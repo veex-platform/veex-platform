@@ -1,0 +1,40 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "platform.gpio"
+  - "platform.core"
+  - "comm.mqtt"
+
+flows:
+  main_loop:
+    steps:
+      - name: "led_on"
+        capability: "platform.gpio"
+        action: "write"
+        params: { pin: 2, level: 1 }
+      
+      - name: "report_high"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { topic: "v1/device/veex/blink", payload: "ON" }
+
+      - name: "wait_1s"
+        capability: "platform.core"
+        action: "wait"
+        params: { ms: 1000 }
+
+      - name: "led_off"
+        capability: "platform.gpio"
+        action: "write"
+        params: { pin: 2, level: 0 }
+
+      - name: "report_low"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { topic: "v1/device/veex/blink", payload: "OFF" }
+
+      - name: "wait_2s"
+        capability: "platform.core"
+        action: "wait"
+        params: { ms: 1000 }

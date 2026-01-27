@@ -1,0 +1,19 @@
+version: "1.0"
+name: "CAN Filtering Gateway"
+description: "Coleta seletiva de dados do barramento CAN industrial."
+
+flows:
+  - name: "process_can"
+    steps:
+      - name: "wait_frame"
+        capability: "comm.can"
+        action: "read"
+        params: { filter_id: 0x100, mask: 0x7FF }
+
+      - name: "telemetry"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { 
+          topic: "v1/industrial/telemetry/engine", 
+          payload: "$DATA"
+        }

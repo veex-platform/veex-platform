@@ -1,0 +1,24 @@
+vdlVersion: "1.0"
+environment:
+  target: "esp32"
+capabilities:
+  - "platform.sensor"
+  - "comm.mqtt"
+
+flows:
+  monitor:
+    steps:
+      - name: "read_temp"
+        capability: "platform.sensor"
+        action: "read"
+        params: { type: "temperature" }
+
+      - name: "read_humidity"
+        capability: "platform.sensor"
+        action: "read"
+        params: { type: "humidity" }
+
+      - name: "log_telemetry"
+        capability: "comm.mqtt"
+        action: "publish"
+        params: { topic: "v1/env/telemetry", payload: "$DATA" }

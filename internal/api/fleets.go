@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -22,13 +23,21 @@ func NewFleetsHandler(database *sql.DB) *FleetsHandler {
 // @Description Get list of all device fleets/groups with device counts
 // @Tags Fleets
 // @Produce json
+// @Param limit query int false "Maximum results" default(100)
+// @Param offset query int false "Number of results to skip" default(0)
 // @Success 200 {object} map[string]interface{}
 // @Router /api/v1/fleets [get]
 func (h *FleetsHandler) ListFleets(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "100")
+	offsetStr := c.DefaultQuery("offset", "0")
+	limit, _ := strconv.Atoi(limitStr)
+	offset, _ := strconv.Atoi(offsetStr)
+
 	rows, err := h.db.Query(`
 		SELECT id, name, description, created_at, updated_at 
 		FROM fleets 
-		ORDER BY created_at DESC`)
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`, limit, offset)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
@@ -64,6 +73,8 @@ func (h *FleetsHandler) ListFleets(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"fleets": fleets,
+		"limit":  limit,
+		"offset": offset,
 		"total":  len(fleets),
 	})
 }

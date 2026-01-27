@@ -27,6 +27,12 @@ func NewTemplatesHandler(templatesDir string) *TemplatesHandler {
 }
 
 // ListTemplates scans the templates directory and returns all VDL templates
+// @Summary List industrial templates
+// @Description Scans the templates directory and returns all VDL templates
+// @Tags Registry
+// @Produce json
+// @Success 200 {array} TemplateEntry
+// @Router /api/v1/dev/templates [get]
 func (h *TemplatesHandler) ListTemplates(c *gin.Context) {
 	templates := []TemplateEntry{}
 

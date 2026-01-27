@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,14 +41,14 @@ func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 
 	if status != "" {
 		rows, err = h.db.Query(`
-			SELECT id, name, artifact_id, target_fleet_id, status, created_at, started_at, completed_at, success_count, failure_count 
+			SELECT id, name, artifact_id, target_fleet_id, target_device_id, status, created_at, started_at, completed_at, success_count, failure_count 
 			FROM ota_campaigns 
 			WHERE status = ? 
 			ORDER BY created_at DESC
 			LIMIT ? OFFSET ?`, status, limit, offset)
 	} else {
 		rows, err = h.db.Query(`
-			SELECT id, name, artifact_id, target_fleet_id, status, created_at, started_at, completed_at, success_count, failure_count 
+			SELECT id, name, artifact_id, target_fleet_id, target_device_id, status, created_at, started_at, completed_at, success_count, failure_count 
 			FROM ota_campaigns 
 			ORDER BY created_at DESC
 			LIMIT ? OFFSET ?`, limit, offset)
@@ -62,10 +63,10 @@ func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 	var campaigns []gin.H
 	for rows.Next() {
 		var id, name, artifactID, status, created string
-		var fleetID, started, completed sql.NullString
+		var fleetID, deviceID, started, completed sql.NullString
 		var successCount, failureCount int
 
-		rows.Scan(&id, &name, &artifactID, &fleetID, &status, &created, &started, &completed, &successCount, &failureCount)
+		rows.Scan(&id, &name, &artifactID, &fleetID, &deviceID, &status, &created, &started, &completed, &successCount, &failureCount)
 
 		campaign := gin.H{
 			"id":            id,
@@ -79,6 +80,9 @@ func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 
 		if fleetID.Valid {
 			campaign["target_fleet_id"] = fleetID.String
+		}
+		if deviceID.Valid {
+			campaign["target_device_id"] = deviceID.String
 		}
 		if started.Valid {
 			campaign["started_at"] = started.String
@@ -109,10 +113,11 @@ func (h *OTAHandler) ListCampaigns(c *gin.Context) {
 // @Router /api/v1/admin/ota/campaigns [post]
 func (h *OTAHandler) CreateCampaign(c *gin.Context) {
 	var req struct {
-		ID          string `json:"id"`
-		Name        string `json:"name"`
-		ArtifactID  string `json:"artifact_id"`
-		TargetFleet string `json:"target_fleet_id"`
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		ArtifactID   string `json:"artifact_id"`
+		TargetFleet  string `json:"target_fleet_id"`
+		TargetDevice string `json:"target_device_id"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -126,8 +131,10 @@ func (h *OTAHandler) CreateCampaign(c *gin.Context) {
 	}
 
 	_, err := h.db.Exec(`
-		INSERT INTO ota_campaigns (id, name, artifact_id, target_fleet_id, status) 
-		VALUES (?, ?, ?, ?, 'draft')`, req.ID, req.Name, req.ArtifactID, req.TargetFleet)
+		INSERT INTO ota_campaigns (id, name, artifact_id, target_fleet_id, target_device_id, status) 
+		VALUES (?, ?, ?, ?, ?, 'draft')`, req.ID, req.Name, req.ArtifactID,
+		sql.NullString{String: req.TargetFleet, Valid: req.TargetFleet != ""},
+		sql.NullString{String: req.TargetDevice, Valid: req.TargetDevice != ""})
 
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
@@ -160,13 +167,13 @@ func (h *OTAHandler) GetCampaign(c *gin.Context) {
 	campaignID := c.Param("id")
 
 	var id, name, artifactID, status, created string
-	var fleetID, started, completed sql.NullString
+	var fleetID, deviceID, started, completed sql.NullString
 	var successCount, failureCount int
 
 	err := h.db.QueryRow(`
-		SELECT id, name, artifact_id, target_fleet_id, status, created_at, started_at, completed_at, success_count, failure_count 
+		SELECT id, name, artifact_id, target_fleet_id, target_device_id, status, created_at, started_at, completed_at, success_count, failure_count 
 		FROM ota_campaigns WHERE id = ?`, campaignID).
-		Scan(&id, &name, &artifactID, &fleetID, &status, &created, &started, &completed, &successCount, &failureCount)
+		Scan(&id, &name, &artifactID, &fleetID, &deviceID, &status, &created, &started, &completed, &successCount, &failureCount)
 
 	if err == sql.ErrNoRows {
 		c.String(http.StatusNotFound, "Campaign not found")
@@ -189,6 +196,9 @@ func (h *OTAHandler) GetCampaign(c *gin.Context) {
 
 	if fleetID.Valid {
 		campaign["target_fleet_id"] = fleetID.String
+	}
+	if deviceID.Valid {
+		campaign["target_device_id"] = deviceID.String
 	}
 	if started.Valid {
 		campaign["started_at"] = started.String
@@ -297,6 +307,48 @@ func (h *OTAHandler) ResumeCampaign(c *gin.Context) {
 	h.logEvent("campaign_resumed", "campaign", campaignID, "{}")
 
 	c.JSON(http.StatusOK, gin.H{"status": "active"})
+}
+
+// InstantDeploy godoc
+// @Summary Rapidly deploy artifact to device
+// @Description Creates and starts an OTA campaign for a specific device immediately
+// @Tags OTA
+// @Accept json
+// @Produce json
+// @Param deploy body map[string]interface{} true "Deploy payload"
+// @Success 201 {object} map[string]interface{}
+// @Router /api/v1/dev/deploy [post]
+func (h *OTAHandler) InstantDeploy(c *gin.Context) {
+	var req struct {
+		DeviceID   string `json:"device_id"`
+		ArtifactID string `json:"artifact_id"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	campaignID := fmt.Sprintf("instant-%d", time.Now().UnixNano())
+	campaignName := "Instant Flash: " + req.ArtifactID
+
+	// 1. Create campaign already active
+	_, err := h.db.Exec(`
+		INSERT INTO ota_campaigns (id, name, artifact_id, target_device_id, status, started_at) 
+		VALUES (?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)`, campaignID, campaignName, req.ArtifactID, req.DeviceID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create instant campaign: " + err.Error()})
+		return
+	}
+
+	h.logEvent("instant_deploy_started", "device", req.DeviceID, fmt.Sprintf(`{"artifact":"%s"}`, req.ArtifactID))
+
+	c.JSON(http.StatusCreated, gin.H{
+		"campaign_id": campaignID,
+		"status":      "active",
+		"message":     "Instant deployment started",
+	})
 }
 
 func (h *OTAHandler) logEvent(eventType, resourceType, resourceID, payload string) {

@@ -20,6 +20,17 @@ type RegistryHandler struct {
 	Devices    *DeviceRegistry
 }
 
+// Upload godoc
+// @Summary Upload industrial artifact
+// @Description Uploads a .vex binary and registers it in the registry
+// @Tags Registry
+// @Accept multipart/form-data
+// @Produce json
+// @Param artifact formData file true "Industrial artifact (.vex)"
+// @Param name formData string true "Artifact name"
+// @Param version formData string true "Artifact version"
+// @Success 201 {object} model.Artifact
+// @Router /api/v1/dev/upload [post]
 func (h *RegistryHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -136,6 +147,14 @@ func (h *RegistryHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(artifact)
 }
 
+// Download godoc
+// @Summary Download industrial artifact
+// @Description Fetches a .vex binary from the registry
+// @Tags Registry
+// @Produce application/octet-stream
+// @Param id query string true "Artifact ID"
+// @Success 200 {file} binary
+// @Router /api/v1/registry/download [get]
 func (h *RegistryHandler) Download(w http.ResponseWriter, r *http.Request) {
 	artifactID := r.URL.Query().Get("id")
 	if artifactID == "" {
@@ -153,6 +172,15 @@ func (h *RegistryHandler) Download(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
+// Build godoc
+// @Summary Build VDL to VEX
+// @Description Compiles a VDL definition into a signed .vex binary
+// @Tags Registry
+// @Accept json
+// @Produce json
+// @Param build body map[string]interface{} true "Build payload (name, version, vdl)"
+// @Success 201 {object} model.Artifact
+// @Router /api/v1/dev/build [post]
 func (h *RegistryHandler) Build(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -170,13 +198,21 @@ func (h *RegistryHandler) Build(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Criar VDL temporário
-	vdlPath := filepath.Join(os.TempDir(), req.Name+".yaml")
-	if err := os.WriteFile(vdlPath, []byte(req.VDL), 0644); err != nil {
+	// 1. Criar VDL temporário único
+	tempFile, err := os.CreateTemp("", "veex-build-*.yaml")
+	if err != nil {
 		http.Error(w, "Failed to create temp vdl", http.StatusInternalServerError)
 		return
 	}
+	vdlPath := tempFile.Name()
 	defer os.Remove(vdlPath)
+
+	if _, err := tempFile.Write([]byte(req.VDL)); err != nil {
+		tempFile.Close()
+		http.Error(w, "Failed to write temp vdl", http.StatusInternalServerError)
+		return
+	}
+	tempFile.Close()
 
 	// 2. Usar a Biblioteca de Build
 	def, err := vdl.Load(vdlPath)

@@ -822,6 +822,146 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/dev/build": {
+            "post": {
+                "description": "Compiles a VDL definition into a signed .vex binary",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "Build VDL to VEX",
+                "parameters": [
+                    {
+                        "description": "Build payload (name, version, vdl)",
+                        "name": "build",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.Artifact"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dev/deploy": {
+            "post": {
+                "description": "Creates and starts an OTA campaign for a specific device immediately",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "OTA"
+                ],
+                "summary": "Rapidly deploy artifact to device",
+                "parameters": [
+                    {
+                        "description": "Deploy payload",
+                        "name": "deploy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dev/templates": {
+            "get": {
+                "description": "Scans the templates directory and returns all VDL templates",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "List industrial templates",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.TemplateEntry"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dev/upload": {
+            "post": {
+                "description": "Uploads a .vex binary and registers it in the registry",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "Upload industrial artifact",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Industrial artifact (.vex)",
+                        "name": "artifact",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Artifact name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Artifact version",
+                        "name": "version",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.Artifact"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/metrics": {
             "get": {
                 "description": "Get platform metrics in Prometheus exposition format",
@@ -837,6 +977,35 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/registry/download": {
+            "get": {
+                "description": "Fetches a .vex binary from the registry",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "Download industrial artifact",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artifact ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
                         }
                     }
                 }
@@ -863,6 +1032,63 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "definitions": {
+        "api.TemplateEntry": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "vdl": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Artifact": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "download_url": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "has_sbom": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sha256": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "target_arch": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        }
     }
 }`
 
@@ -871,7 +1097,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
 	BasePath:         "/",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"https", "http"},
 	Title:            "VEEX Platform API",
 	Description:      "Enterprise-grade Industrial IoT Platform API for device management, OTA updates, and telemetry.",
 	InfoInstanceName: "swagger",

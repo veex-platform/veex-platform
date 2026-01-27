@@ -98,13 +98,15 @@ func InitDB(dataPath string) (*sql.DB, error) {
 			name TEXT NOT NULL,
 			artifact_id TEXT NOT NULL,
 			target_fleet_id TEXT,
+			target_device_id TEXT,
 			status TEXT DEFAULT 'draft',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			started_at DATETIME,
 			completed_at DATETIME,
 			success_count INTEGER DEFAULT 0,
 			failure_count INTEGER DEFAULT 0,
-			FOREIGN KEY (target_fleet_id) REFERENCES fleets(id) ON DELETE SET NULL
+			FOREIGN KEY (target_fleet_id) REFERENCES fleets(id) ON DELETE SET NULL,
+			FOREIGN KEY (target_device_id) REFERENCES devices(id) ON DELETE SET NULL
 		);`,
 
 		`CREATE INDEX IF NOT EXISTS idx_campaigns_status ON ota_campaigns(status);`,

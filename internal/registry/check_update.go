@@ -52,7 +52,7 @@ func (h *RegistryHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Now check for an active campaign for this fleet
+	// Now check for an active campaign for this fleet OR this specific device
 	var artifactID string
 	var latestVersion string
 	query := `
@@ -60,11 +60,13 @@ func (h *RegistryHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		FROM ota_campaigns c
 		JOIN artifacts a ON c.artifact_id = a.id
 		WHERE c.status = 'active' 
-		AND (c.target_fleet_id = ? OR c.target_fleet_id IS NULL)
-		ORDER BY c.created_at DESC 
+		AND (c.target_device_id = ? OR (c.target_device_id IS NULL AND (c.target_fleet_id = ? OR c.target_fleet_id IS NULL)))
+		ORDER BY 
+			CASE WHEN c.target_device_id = ? THEN 0 ELSE 1 END,
+			c.created_at DESC 
 		LIMIT 1`
 
-	err = h.Devices.db.QueryRow(query, fleetID).Scan(&artifactID, &latestVersion)
+	err = h.Devices.db.QueryRow(query, deviceID, fleetID, deviceID).Scan(&artifactID, &latestVersion)
 
 	hasUpdate := false
 	downloadURL := ""

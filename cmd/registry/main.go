@@ -174,7 +174,11 @@ func main() {
 			dev.POST("/build", gin.WrapF(rh.Build))
 			dev.POST("/upload", gin.WrapF(rh.Upload))
 			dev.GET("/templates", templatesHandler.ListTemplates)
+			dev.POST("/deploy", otaHandler.InstantDeploy)
 		}
+
+		// --- RETAIN FOR COMPATIBILITY ---
+		v1.GET("/health", healthHandler.Health)
 
 		// --- RUNTIME GROUP (Devices) ---
 		runtime := v1.Group("/runtime")

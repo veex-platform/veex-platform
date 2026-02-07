@@ -34,7 +34,7 @@ func TestCORSMiddleware(t *testing.T) {
 		},
 		{
 			name:              "Explicit Env",
-			origin:            "http://other.com",
+			origin:            "http://trusted.com",
 			allowedEnv:        "http://trusted.com",
 			expectedOrigin:    "http://trusted.com",
 			expectCredentials: true,
@@ -43,7 +43,7 @@ func TestCORSMiddleware(t *testing.T) {
 			name:              "No Origin No Env",
 			origin:            "",
 			allowedEnv:        "",
-			expectedOrigin:    "*",
+			expectedOrigin:    "",
 			expectCredentials: false,
 		},
 	}

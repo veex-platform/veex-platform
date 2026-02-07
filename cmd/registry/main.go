@@ -15,6 +15,7 @@ import (
 	"github.com/veex-platform/veex-platform/internal/db"
 	"github.com/veex-platform/veex-platform/internal/observability"
 	"github.com/veex-platform/veex-platform/internal/registry"
+	"github.com/veex-platform/veex-platform/internal/ws"
 )
 
 // @title VEEX Platform API
@@ -68,10 +69,14 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	// Initialize WebSocket Hub
+	hub := ws.NewHub()
+	go hub.Run()
+
 	// Initialize Handlers
 	rh := &registry.RegistryHandler{
 		StorageDir: storageDir,
-		Devices:    registry.NewDeviceRegistry(database),
+		Devices:    registry.NewDeviceRegistry(database, hub),
 	}
 	oh := observability.NewObsHandler(database)
 
@@ -111,6 +116,11 @@ func main() {
 		// Store in context for handlers to use
 		c.Set("BaseURL", baseURL)
 		c.Next()
+	})
+
+	// WebSocket Endpoint
+	router.GET("/ws", func(c *gin.Context) {
+		ws.ServeWs(hub, c)
 	})
 
 	// API v1 routes
@@ -220,6 +230,7 @@ func main() {
 	fmt.Printf("API Documentation: http://localhost:%s/swagger/index.html\n", port)
 	fmt.Printf("Health Check: http://localhost:%s/api/v1/health\n", port)
 	fmt.Printf("Metrics: http://localhost:%s/api/v1/metrics\n", port)
+	fmt.Printf("WebSocket: ws://localhost:%s/ws\n", port)
 	fmt.Printf("Listening on port %s...\n", port)
 
 	// Start server

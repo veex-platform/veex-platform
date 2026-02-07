@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/veex-platform/veex-platform/internal/ws"
 )
 
 type DeviceInfo struct {
@@ -15,11 +17,15 @@ type DeviceInfo struct {
 }
 
 type DeviceRegistry struct {
-	db *sql.DB
+	db  *sql.DB
+	hub *ws.Hub
 }
 
-func NewDeviceRegistry(database *sql.DB) *DeviceRegistry {
-	return &DeviceRegistry{db: database}
+func NewDeviceRegistry(database *sql.DB, hub *ws.Hub) *DeviceRegistry {
+	return &DeviceRegistry{
+		db:  database,
+		hub: hub,
+	}
 }
 
 func (r *DeviceRegistry) Register(w http.ResponseWriter, req *http.Request) {
@@ -43,6 +49,16 @@ func (r *DeviceRegistry) Register(w http.ResponseWriter, req *http.Request) {
 
 	device.Registered = true
 	device.LastSeen = time.Now()
+
+	// Broadcast event
+	if r.hub != nil {
+		event := map[string]interface{}{
+			"type":    "device_registered",
+			"payload": device,
+		}
+		msg, _ := json.Marshal(event)
+		r.hub.BroadcastMessage(msg)
+	}
 
 	fmt.Printf("🛡️  Registry: Device %s registered and trusted in SQLite.\n", device.ID)
 	w.WriteHeader(http.StatusCreated)

@@ -21,6 +21,8 @@ func CORSMiddleware() gin.HandlerFunc {
 			"http://admin.localhost",
 			"https://studio.veexplatform.com",
 			"https://admin.veexplatform.com",
+			"https://veexplatform.com",
+			"https://www.veexplatform.com",
 		}
 
 		allowed := false
@@ -49,17 +51,16 @@ func CORSMiddleware() gin.HandlerFunc {
 				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 				c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 			}
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, Key")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 		}
 
 		if c.Request.Method == "OPTIONS" {
-			// Even if origin is not in allowlist, we might want to return 204 for OPTIONS to avoid some browser console errors,
-			// but strictly speaking, we should only return success if allowed.
-			// Ideally, for unauthorized origins, we just let it fail or return 403.
 			if allowed {
 				c.AbortWithStatus(http.StatusNoContent)
 			} else {
+				// Log denied origin for debugging
+				// fmt.Printf("CORS Denied: %s\n", origin)
 				c.AbortWithStatus(http.StatusForbidden)
 			}
 			return

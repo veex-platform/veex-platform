@@ -179,6 +179,7 @@ func main() {
 			dev.GET("/templates", templatesHandler.ListTemplates)
 			dev.POST("/deploy", otaHandler.InstantDeploy)
 			dev.POST("/simulate", otaHandler.Simulate)
+			dev.POST("/validate", api.ValidateVDLHandler)
 		}
 
 		// --- RETAIN FOR COMPATIBILITY ---

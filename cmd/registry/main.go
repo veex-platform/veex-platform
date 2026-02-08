@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -134,20 +133,7 @@ func main() {
 		// --- ADMIN GROUP ---
 		admin := v1.Group("/admin")
 		{
-			admin.GET("/stats", func(c *gin.Context) {
-				var devCount, fleetCount, campaignCount int
-				database.QueryRow("SELECT COUNT(*) FROM devices").Scan(&devCount)
-				database.QueryRow("SELECT COUNT(*) FROM fleets").Scan(&fleetCount)
-				database.QueryRow("SELECT COUNT(*) FROM ota_campaigns").Scan(&campaignCount)
-
-				c.JSON(http.StatusOK, gin.H{
-					"devices":   devCount,
-					"fleets":    fleetCount,
-					"campaigns": campaignCount,
-					"version":   "v1.1.1",
-					"status":    "operational",
-				})
-			})
+			admin.GET("/stats", analyticsHandler.GetStats)
 			admin.GET("/health", healthHandler.Health)
 
 			// Resource Management
@@ -181,6 +167,8 @@ func main() {
 			}
 
 			admin.GET("/analytics/dashboard", analyticsHandler.GetDashboard)
+			admin.GET("/analytics/devices/summary", analyticsHandler.GetDeviceSummary)
+			admin.GET("/analytics/ota/success-rate", analyticsHandler.GetOTAMetrics)
 		}
 
 		// --- DEVELOPER GROUP (CLI & Studio) ---

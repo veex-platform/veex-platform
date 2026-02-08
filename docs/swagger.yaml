@@ -36,6 +36,35 @@ definitions:
       version:
         type: string
     type: object
+  observability.TelemetrySignal:
+    properties:
+      device_id:
+        type: string
+      signal:
+        type: string
+      timestamp:
+        type: string
+      value:
+        type: string
+    type: object
+  registry.CheckUpdateResponse:
+    properties:
+      download_url:
+        type: string
+      has_update:
+        type: boolean
+      latest_version:
+        type: string
+    type: object
+  registry.DeviceInfo:
+    properties:
+      id:
+        type: string
+      last_seen:
+        type: string
+      registered:
+        type: boolean
+    type: object
 info:
   contact:
     email: support@veexplatform.com
@@ -584,6 +613,20 @@ paths:
       summary: Start OTA campaign
       tags:
       - OTA
+  /api/v1/admin/stats:
+    get:
+      description: Get counts of devices, fleets, and campaigns
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get system statistics
+      tags:
+      - Admin
   /api/v1/dev/build:
     post:
       consumes:
@@ -709,6 +752,56 @@ paths:
       summary: Download industrial artifact
       tags:
       - Registry
+  /api/v1/runtime/check-update:
+    get:
+      description: Check if there is a new firmware update available for the device
+      parameters:
+      - description: Device ID
+        in: query
+        name: device_id
+        required: true
+        type: string
+      - description: Current firmware version
+        in: query
+        name: current_version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/registry.CheckUpdateResponse'
+      summary: Check for updates
+      tags:
+      - Runtime
+  /api/v1/runtime/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new device in the platform
+      parameters:
+      - description: Device registration payload
+        in: body
+        name: device
+        required: true
+        schema:
+          $ref: '#/definitions/registry.DeviceInfo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/registry.DeviceInfo'
+        "400":
+          description: Invalid body
+          schema:
+            type: string
+      summary: Register new device
+      tags:
+      - Runtime
   /api/v1/version:
     get:
       description: Get version information about the VEEX Platform API
@@ -723,6 +816,45 @@ paths:
       summary: Get API version
       tags:
       - Health
+  /dashboard:
+    get:
+      description: Simple HTML dashboard for viewing recent telemetry signals
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML Dashboard
+          schema:
+            type: string
+      summary: Observability Dashboard
+      tags:
+      - Observability
+  /signals:
+    post:
+      consumes:
+      - application/json
+      description: Ingest a single telemetry signal from a device via HTTP
+      parameters:
+      - description: Telemetry signal payload
+        in: body
+        name: signal
+        required: true
+        schema:
+          $ref: '#/definitions/observability.TelemetrySignal'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Ingest telemetry signal
+      tags:
+      - Observability
 schemes:
 - https
 - http

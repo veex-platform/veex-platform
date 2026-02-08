@@ -23,6 +23,16 @@ func NewObsHandler(database *sql.DB) *ObsHandler {
 	return &ObsHandler{db: database}
 }
 
+// Ingest godoc
+// @Summary Ingest telemetry signal
+// @Description Ingest a single telemetry signal from a device via HTTP
+// @Tags Observability
+// @Accept json
+// @Produce json
+// @Param signal body TelemetrySignal true "Telemetry signal payload"
+// @Success 202 {string} string "Accepted"
+// @Failure 400 {string} string "Invalid request"
+// @Router /signals [post]
 func (h *ObsHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -46,6 +56,13 @@ func (h *ObsHandler) Ingest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// Dashboard godoc
+// @Summary Observability Dashboard
+// @Description Simple HTML dashboard for viewing recent telemetry signals
+// @Tags Observability
+// @Produce html
+// @Success 200 {string} string "HTML Dashboard"
+// @Router /dashboard [get]
 func (h *ObsHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 

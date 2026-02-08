@@ -22,7 +22,14 @@ type CheckUpdateResponse struct {
 }
 
 // CheckUpdate handles the heartbeat check-update endpoint
-// GET /api/v1/registry/check-update?device_id=xxx&current_version=yyy
+// @Summary Check for updates
+// @Description Check if there is a new firmware update available for the device
+// @Tags Runtime
+// @Produce json
+// @Param device_id query string true "Device ID"
+// @Param current_version query string true "Current firmware version"
+// @Success 200 {object} CheckUpdateResponse
+// @Router /api/v1/runtime/check-update [get]
 func (h *RegistryHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.URL.Query().Get("device_id")
 	currentVersion := r.URL.Query().Get("current_version")

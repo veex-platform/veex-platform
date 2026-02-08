@@ -15,6 +15,28 @@ func NewAnalyticsHandler(database *sql.DB) *AnalyticsHandler {
 	return &AnalyticsHandler{db: database}
 }
 
+// GetStats returns system-wide statistics
+// @Summary Get system statistics
+// @Description Get counts of devices, fleets, and campaigns
+// @Tags Admin
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /api/v1/admin/stats [get]
+func (h *AnalyticsHandler) GetStats(c *gin.Context) {
+	var devCount, fleetCount, campaignCount int
+	h.db.QueryRow("SELECT COUNT(*) FROM devices").Scan(&devCount)
+	h.db.QueryRow("SELECT COUNT(*) FROM fleets").Scan(&fleetCount)
+	h.db.QueryRow("SELECT COUNT(*) FROM ota_campaigns").Scan(&campaignCount)
+
+	c.JSON(http.StatusOK, gin.H{
+		"devices":   devCount,
+		"fleets":    fleetCount,
+		"campaigns": campaignCount,
+		"version":   "v1.1.1",
+		"status":    "operational",
+	})
+}
+
 // GetDashboard returns real-time dashboard metrics
 // @Summary Get dashboard metrics
 // @Description Get real-time metrics for the platform dashboard

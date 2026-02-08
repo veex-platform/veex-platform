@@ -822,6 +822,27 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/stats": {
+            "get": {
+                "description": "Get counts of devices, fleets, and campaigns",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get system statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/dev/build": {
             "post": {
                 "description": "Compiles a VDL definition into a signed .vex binary",
@@ -1011,6 +1032,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/runtime/check-update": {
+            "get": {
+                "description": "Check if there is a new firmware update available for the device",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Runtime"
+                ],
+                "summary": "Check for updates",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Device ID",
+                        "name": "device_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Current firmware version",
+                        "name": "current_version",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/registry.CheckUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runtime/register": {
+            "post": {
+                "description": "Register a new device in the platform",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Runtime"
+                ],
+                "summary": "Register new device",
+                "parameters": [
+                    {
+                        "description": "Device registration payload",
+                        "name": "device",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/registry.DeviceInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/registry.DeviceInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/version": {
             "get": {
                 "description": "Get version information about the VEEX Platform API",
@@ -1027,6 +1124,66 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard": {
+            "get": {
+                "description": "Simple HTML dashboard for viewing recent telemetry signals",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Observability"
+                ],
+                "summary": "Observability Dashboard",
+                "responses": {
+                    "200": {
+                        "description": "HTML Dashboard",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/signals": {
+            "post": {
+                "description": "Ingest a single telemetry signal from a device via HTTP",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Observability"
+                ],
+                "summary": "Ingest telemetry signal",
+                "parameters": [
+                    {
+                        "description": "Telemetry signal payload",
+                        "name": "signal",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/observability.TelemetrySignal"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -1086,6 +1243,51 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
+                }
+            }
+        },
+        "observability.TelemetrySignal": {
+            "type": "object",
+            "properties": {
+                "device_id": {
+                    "type": "string"
+                },
+                "signal": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "registry.CheckUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "download_url": {
+                    "type": "string"
+                },
+                "has_update": {
+                    "type": "boolean"
+                },
+                "latest_version": {
+                    "type": "string"
+                }
+            }
+        },
+        "registry.DeviceInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "last_seen": {
+                    "type": "string"
+                },
+                "registered": {
+                    "type": "boolean"
                 }
             }
         }

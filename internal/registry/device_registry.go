@@ -28,6 +28,16 @@ func NewDeviceRegistry(database *sql.DB, hub *ws.Hub) *DeviceRegistry {
 	}
 }
 
+// Register godoc
+// @Summary Register new device
+// @Description Register a new device in the platform
+// @Tags Runtime
+// @Accept json
+// @Produce json
+// @Param device body DeviceInfo true "Device registration payload"
+// @Success 201 {object} DeviceInfo
+// @Failure 400 {string} string "Invalid body"
+// @Router /api/v1/runtime/register [post]
 func (r *DeviceRegistry) Register(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

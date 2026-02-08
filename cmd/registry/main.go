@@ -118,14 +118,19 @@ func main() {
 		c.Next()
 	})
 
-	// WebSocket Endpoint
-	router.GET("/ws", func(c *gin.Context) {
-		ws.ServeWs(hub, c)
-	})
-
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
+		// WebSocket Endpoint (Moved to /api/v1/ws to match Ingress routing)
+		// @Summary Connect to Real-time WebSocket
+		// @Description Establishes a WebSocket connection for real-time device events
+		// @Tags System
+		// @Success 101 {string} string "Switching Protocols"
+		// @Router /api/v1/ws [get]
+		v1.GET("/ws", func(c *gin.Context) {
+			ws.ServeWs(hub, c)
+		})
+
 		// --- ADMIN GROUP ---
 		admin := v1.Group("/admin")
 		{

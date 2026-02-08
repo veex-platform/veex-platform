@@ -133,6 +133,14 @@ func (h *OTAHandler) Simulate(c *gin.Context) {
 				}
 			}
 
+			// Extract params
+			params := make(map[string]interface{})
+			if p, ok := s["params"].(map[interface{}]interface{}); ok {
+				for pk, pv := range p {
+					params[fmt.Sprintf("%v", pk)] = pv
+				}
+			}
+
 			// Simulate processing delay
 			time.Sleep(time.Duration(rand.Intn(200)) * time.Millisecond)
 
@@ -141,27 +149,78 @@ func (h *OTAHandler) Simulate(c *gin.Context) {
 			// Mock specific behaviors
 			switch {
 			case capability == "modbus" || strings.HasPrefix(capability, "modbus"):
-				log("debug", fmt.Sprintf("Reading register 4001: %d", 450+rand.Intn(50)), id)
+				reg := params["register"]
+				if reg == nil {
+					reg = "4001"
+				}
+				log("debug", fmt.Sprintf("MOCK [Modbus]: Reading register %v: %d", reg, 450+rand.Intn(50)), id)
 
 			case capability == "ml" || strings.HasPrefix(capability, "ml"):
+				model := params["model"]
+				if model == nil {
+					model = "anomaly-detector-v1"
+				}
 				score := 0.1 + rand.Float64()*0.85
-				log("info", fmt.Sprintf("Inference Result: Anomaly Score = %.4f", score), id)
+				log("info", fmt.Sprintf("MOCK [Edge AI]: Inference with model '%v' -> Score = %.4f", model, score), id)
 				if score > 0.8 {
-					log("warn", "Anomaly detected! Triggering condition.", id)
+					log("warn", "SIMULATOR: Anomaly detected! High probability of hardware failure.", id)
 				}
 
 			case capability == "comm.ble" || strings.HasPrefix(capability, "ble"):
 				if action == "advertise" {
-					log("info", "BLE Advertising Started: VEEX-NODE", id)
+					name := params["name"]
+					if name == nil {
+						name = "VEEX-NODE"
+					}
+					log("info", fmt.Sprintf("MOCK [BLE]: Advertising Started: %v", name), id)
 				} else {
-					log("info", "BLE Action executed", id)
+					log("info", "MOCK [BLE]: Action executed", id)
 				}
 
-			case capability == "cloud" || capability == "comm.mqtt" || capability == "comm.http":
-				log("success", "Data pushed to upstream successfully.", id)
+			case capability == "comm.mqtt":
+				topic := params["topic"]
+				if topic == nil {
+					topic = "v1/devices/telemetry"
+				}
+				log("success", fmt.Sprintf("MOCK [MQTT]: Published JSON payload to topic '%v'", topic), id)
+
+			case capability == "comm.http":
+				url := params["url"]
+				if url == nil {
+					url = "https://api.veexplatform.com/v1/ingest"
+				}
+				log("success", fmt.Sprintf("MOCK [HTTP]: POST request to %v returned 200 OK", url), id)
 
 			case capability == "platform.gpio":
-				log("debug", "GPIO State Updated", id)
+				pin := params["pin"]
+				if pin == nil {
+					pin = "2"
+				}
+				level := params["level"]
+				if level == nil {
+					level = "0"
+				}
+				state := "LOW"
+				if fmt.Sprintf("%v", level) == "1" || strings.ToLower(fmt.Sprintf("%v", level)) == "high" {
+					state = "HIGH"
+				}
+				log("debug", fmt.Sprintf("MOCK [GPIO]: Digital Pin %v set to %s", pin, state), id)
+
+			case capability == "platform.sensor":
+				sensorType := params["type"]
+				if sensorType == nil {
+					sensorType = "temperature"
+				}
+				val := 20.0 + rand.Float64()*10.0
+				unit := "C"
+				if sensorType == "humidity" {
+					val = 40.0 + rand.Float64()*20.0
+					unit = "%"
+				}
+				log("info", fmt.Sprintf("MOCK [Sensor]: Reading %v -> %.2f %s", sensorType, val, unit), id)
+
+			case capability == "cloud":
+				log("success", "MOCK [Cloud]: Data pushed to industrial registry successfully.", id)
 			}
 		}
 	}

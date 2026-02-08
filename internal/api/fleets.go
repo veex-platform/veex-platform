@@ -45,7 +45,7 @@ func (h *FleetsHandler) ListFleets(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var fleets []gin.H
+	fleets := []gin.H{}
 	for rows.Next() {
 		var id, name, created, updated string
 		var description sql.NullString

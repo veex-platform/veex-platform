@@ -56,7 +56,7 @@ func (h *DevicesHandler) ListDevices(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var devices []gin.H
+	devices := []gin.H{}
 	for rows.Next() {
 		var id, lastSeen string
 		var firmwareVersion, fleetIDCol, metadata sql.NullString
@@ -238,7 +238,7 @@ func (h *DevicesHandler) GetDeviceTelemetry(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var signals []gin.H
+	signals := []gin.H{}
 	for rows.Next() {
 		var signalType, value, unit, timestamp string
 		rows.Scan(&signalType, &value, &unit, &timestamp)

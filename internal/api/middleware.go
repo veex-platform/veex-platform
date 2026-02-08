@@ -33,6 +33,16 @@ func CORSMiddleware() gin.HandlerFunc {
 			}
 		}
 
+		// Allow wildcard subdomains for veexplatform.com
+		if !allowed && (len(origin) > 17 && origin[len(origin)-17:] == ".veexplatform.com") {
+			allowed = true
+		}
+
+		// Allow localhost with any port (useful for dev)
+		if !allowed && (len(origin) > 16 && origin[:16] == "http://localhost") {
+			allowed = true
+		}
+
 		// Also allow if explicitly set via ENV
 		isWildcard := false
 		if envOrigin := os.Getenv("ALLOWED_ORIGINS"); envOrigin != "" {

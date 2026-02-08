@@ -25,7 +25,7 @@ import (
 
 // @contact.name VEEX Platform
 // @contact.url https://github.com/veex-platform
-// @contact.email support@veex.dev
+// @contact.email support@veexplatform.com
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html

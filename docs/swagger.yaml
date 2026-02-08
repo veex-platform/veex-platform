@@ -38,7 +38,7 @@ definitions:
     type: object
 info:
   contact:
-    email: support@veex.dev
+    email: support@veexplatform.com
     name: VEEX Platform
     url: https://github.com/veex-platform
   description: Enterprise-grade Industrial IoT Platform API for device management,

@@ -13,7 +13,7 @@ const docTemplate = `{
         "contact": {
             "name": "VEEX Platform",
             "url": "https://github.com/veex-platform",
-            "email": "support@veex.dev"
+            "email": "support@veexplatform.com"
         },
         "license": {
             "name": "Apache 2.0",

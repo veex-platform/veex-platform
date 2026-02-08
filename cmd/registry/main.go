@@ -178,6 +178,7 @@ func main() {
 			dev.POST("/upload", gin.WrapF(rh.Upload))
 			dev.GET("/templates", templatesHandler.ListTemplates)
 			dev.POST("/deploy", otaHandler.InstantDeploy)
+			dev.POST("/simulate", otaHandler.Simulate)
 		}
 
 		// --- RETAIN FOR COMPATIBILITY ---

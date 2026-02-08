@@ -10,6 +10,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.1
 	github.com/swaggo/swag v1.16.6
 	github.com/veex-platform/veex-build v0.0.0
+	gopkg.in/yaml.v2 v2.4.0
 	modernc.org/sqlite v1.44.3
 )
 

@@ -1,0 +1,43 @@
+name: "Edge AI Vibration Guard"
+version: "0.9.0"
+description: "Uses on-device ML to detect motor vibration anomalies."
+author: "VEEX Research"
+
+triggers:
+  - type: "sensor/accelerometer"
+    axis: "z"
+    hz: 100
+
+pipeline:
+  - id: "fft_analysis"
+    type: "dsp/fft"
+    params:
+      window_size: 256
+      step: 128
+
+  - id: "anomaly_score"
+    type: "ml/inference"
+    params:
+      model: "vibration_v1.tflite"
+      input: $fft_analysis
+
+  - id: "detect_fault"
+    type: "logic/compare"
+    params:
+      value: $anomaly_score
+      operator: ">"
+      threshold: 0.85
+
+  - id: "emergency_stop"
+    type: "gpio/write"
+    params:
+      pin: 12
+      value: 0
+    condition: $detect_fault
+
+  - id: "notify_cloud"
+    type: "cloud/push"
+    params:
+      event: "machine_fault"
+      score: $anomaly_score
+    condition: $detect_fault

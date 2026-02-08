@@ -1,0 +1,50 @@
+name: "Modbus Temperature PLC"
+version: "1.0.0"
+description: "Reads temperature registers from a Modbus/TCP PLC and alerts on high values."
+author: "VEEX Industrial"
+
+triggers:
+  - type: "timer"
+    interval: "5s"
+
+inputs:
+  - name: "plc_ip"
+    type: "string"
+    default: "192.168.1.50"
+  - name: "temp_threshold"
+    type: "float"
+    default: 45.0
+
+pipeline:
+  - id: "read_temp"
+    type: "modbus/read_holding_registers"
+    params:
+      address: 4001
+      count: 1
+      server: $plc_ip
+
+  - id: "scale_value"
+    type: "math/scale"
+    params:
+      input: $read_temp
+      factor: 0.1 # Raw 450 -> 45.0C
+
+  - id: "check_critical"
+    type: "logic/compare"
+    params:
+      value: $scale_value
+      operator: ">"
+      threshold: $temp_threshold
+
+  - id: "alert"
+    type: "system/log"
+    params:
+      level: "error"
+      message: "Critical Temp: {{ $scale_value }}°C"
+    condition: $check_critical
+
+  - id: "telemetry"
+    type: "cloud/push"
+    params:
+      data:
+        temperature: $scale_value

@@ -1,0 +1,40 @@
+name: "MQTT Advanced Telemetry"
+version: "1.2.0"
+description: "Subscribes to local MQTT broker and aggregates data before cloud sync."
+author: "VEEX Industrial"
+
+triggers:
+  - type: "mqtt/subscribe"
+    topic: "factory/cell1/#"
+    broker: "tcp://localhost:1883"
+
+pipeline:
+  - id: "parse_json"
+    type: "data/json_decode"
+    params:
+      input: $trigger.payload
+
+  - id: "filter_status"
+    type: "logic/filter"
+    params:
+      input: $parse_json
+      key: "status"
+      value: "error"
+
+  - id: "enrich_data"
+    type: "data/transform"
+    params:
+      input: $parse_json
+      add_timestamp: true
+      add_device_id: true
+
+  - id: "batch_buffer"
+    type: "system/buffer"
+    params:
+      size: 10
+      timeout: "60s"
+
+  - id: "sync_cloud"
+    type: "cloud/push_batch"
+    params:
+      data: $batch_buffer

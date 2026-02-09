@@ -184,6 +184,7 @@ func main() {
 
 		// --- RETAIN FOR COMPATIBILITY ---
 		v1.GET("/health", healthHandler.Health)
+		v1.GET("/metrics", healthHandler.Metrics)
 
 		// --- RUNTIME GROUP (Devices) ---
 		runtime := v1.Group("/runtime")
